@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AuraShellView: View {
     @StateObject private var engine = AuraEngine()
-    @StateObject private var store = AuraPlaceholderStore()
+    @StateObject private var store = AuraRuntimeStore()
     @State private var selection: AuraSection = .dashboard
 
     var body: some View {
@@ -17,6 +17,9 @@ struct AuraShellView: View {
             .frame(minWidth: 640)
         }
         .navigationSplitViewStyle(.automatic)
+        .task {
+            await store.refreshResources()
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: refreshCurrentSection) {
@@ -88,8 +91,7 @@ struct AuraShellView: View {
         switch selection {
         case .dashboard, .containers, .images, .volumes, .networks, .converter, .logs, .settings:
             Task { @MainActor in
-                store.refresh()
-                engine.runContainerCommand(["--help"])
+                await store.refreshResources()
             }
         }
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ConverterView: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @State private var dockerInput = ""
     @State private var convertedCommand = ""
 

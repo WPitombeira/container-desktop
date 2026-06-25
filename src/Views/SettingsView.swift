@@ -1,14 +1,12 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State private var usePlaceholderData = true
     @State private var autoRefresh = false
     @State private var selectedDefaultSection = AuraSection.dashboard.rawValue
 
     var body: some View {
         Form {
             Section("General") {
-                Toggle("Use placeholder data while core services connect", isOn: $usePlaceholderData)
                 Toggle("Auto-refresh resource list", isOn: $autoRefresh)
             }
 
@@ -21,7 +19,7 @@ struct SettingsView: View {
             }
 
             Section("Runtime Notes") {
-                Text("Container execution, conversion, and daemon discovery remain service-backed and will replace these placeholders when the engine layer is ready.")
+                Text("Container execution, conversion, CLI discovery, and resource refresh are service-backed. Some advanced lifecycle actions still fall back to the command-line workflow.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

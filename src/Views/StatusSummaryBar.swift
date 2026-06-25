@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct StatusSummaryBar: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @ObservedObject var engine: AuraEngine
 
     private var formattedSync: String {
@@ -13,16 +13,16 @@ struct StatusSummaryBar: View {
     var body: some View {
         HStack(spacing: 16) {
             Label(
-                engine.isRunning ? "CLI Active" : "CLI Idle",
-                systemImage: engine.isRunning ? "bolt.fill" : "pause.fill"
+                store.isBusy || engine.isRunning ? "CLI Active" : "CLI Idle",
+                systemImage: store.isBusy || engine.isRunning ? "bolt.fill" : "pause.fill"
             )
             .labelStyle(.titleAndIcon)
             .padding(.vertical, 6)
             .padding(.horizontal, 10)
             .background(
-                Capsule().fill(engine.isRunning ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.15))
+                Capsule().fill(store.isBusy || engine.isRunning ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.15))
             )
-            .foregroundStyle(engine.isRunning ? Color.accentColor : Color.secondary)
+            .foregroundStyle(store.isBusy || engine.isRunning ? Color.accentColor : Color.secondary)
 
             Divider().frame(height: 16)
 
@@ -33,6 +33,13 @@ struct StatusSummaryBar: View {
 
             Text("Images: \(store.images.count)")
                 .font(.caption)
+
+            if let cliPath = store.cliPath {
+                Divider().frame(height: 16)
+                Text(cliPath.lastPathComponent)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Spacer()
 

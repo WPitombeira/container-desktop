@@ -9,8 +9,6 @@ public protocol ContainerCommandRunning {
 }
 
 public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked Sendable {
-    private let lock = NSLock()
-
     public init() {}
 
     public func run(
@@ -30,44 +28,16 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
             process.standardError = stderrPipe
 
             let startedAt = Date()
-            var stdoutData = Data()
-            var stderrData = Data()
-            var chunks: [CLICommandOutput.StreamChunk] = []
-            var finished = false
-            let commandArguments = arguments
+            let accumulator = CommandOutputAccumulator(startedAt: startedAt, arguments: arguments)
 
             let finish: (Int32) -> Void = { status in
-                self.lock.lock()
-                if finished {
-                    self.lock.unlock()
-                    return
-                }
-                finished = true
-                self.lock.unlock()
-
-                let elapsed = Date().timeIntervalSince(startedAt)
-                let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
-                let stderr = String(data: stderrData, encoding: .utf8) ?? ""
-                let output = CLICommandOutput(
-                    exitCode: Int(status),
-                    stdout: stdout,
-                    stderr: stderr,
-                    executedAt: startedAt,
-                    elapsed: elapsed,
-                    arguments: commandArguments,
-                    chunks: chunks
-                )
+                guard accumulator.markFinished() else { return }
+                let output = accumulator.output(exitCode: Int(status))
                 continuation.resume(returning: output)
             }
 
             func fail(_ error: Error) {
-                self.lock.lock()
-                if finished {
-                    self.lock.unlock()
-                    return
-                }
-                finished = true
-                self.lock.unlock()
+                guard accumulator.markFinished() else { return }
                 continuation.resume(throwing: ContainerCLIError.commandFailed(error.localizedDescription))
             }
 
@@ -78,12 +48,7 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
                     return
                 }
 
-                self.lock.lock()
-                stdoutData.append(data)
-                if let line = String(data: data, encoding: .utf8), !line.isEmpty {
-                    chunks.append(.init(stream: .standardOutput, text: line))
-                }
-                self.lock.unlock()
+                accumulator.append(data, stream: .standardOutput)
             }
 
             stderrPipe.fileHandleForReading.readabilityHandler = { handle in
@@ -93,12 +58,7 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
                     return
                 }
 
-                self.lock.lock()
-                stderrData.append(data)
-                if let line = String(data: data, encoding: .utf8), !line.isEmpty {
-                    chunks.append(.init(stream: .standardError, text: line))
-                }
-                self.lock.unlock()
+                accumulator.append(data, stream: .standardError)
             }
 
             process.terminationHandler = { process in
@@ -107,21 +67,8 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
 
                 let stdoutRemainder = (try? stdoutPipe.fileHandleForReading.readToEnd()) ?? Data()
                 let stderrRemainder = (try? stderrPipe.fileHandleForReading.readToEnd()) ?? Data()
-                self.lock.lock()
-                stdoutData.append(stdoutRemainder)
-                stderrData.append(stderrRemainder)
-                let outputChunks = chunks
-                self.lock.unlock()
-                var updatedChunks = outputChunks
-                if let remaining = String(data: stdoutRemainder, encoding: .utf8), !remaining.isEmpty {
-                    updatedChunks.append(.init(stream: .standardOutput, text: remaining))
-                }
-                if let remaining = String(data: stderrRemainder, encoding: .utf8), !remaining.isEmpty {
-                    updatedChunks.append(.init(stream: .standardError, text: remaining))
-                }
-                self.lock.lock()
-                chunks = updatedChunks
-                self.lock.unlock()
+                accumulator.append(stdoutRemainder, stream: .standardOutput)
+                accumulator.append(stderrRemainder, stream: .standardError)
 
                 if process.terminationReason == .exit {
                     finish(process.terminationStatus)
@@ -140,5 +87,65 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
                 fail(error)
             }
         }
+    }
+}
+
+private final class CommandOutputAccumulator: @unchecked Sendable {
+    private let lock = NSLock()
+    private let startedAt: Date
+    private let arguments: [String]
+    private var stdoutData = Data()
+    private var stderrData = Data()
+    private var chunks: [CLICommandOutput.StreamChunk] = []
+    private var finished = false
+
+    init(startedAt: Date, arguments: [String]) {
+        self.startedAt = startedAt
+        self.arguments = arguments
+    }
+
+    func append(_ data: Data, stream: CLICommandOutput.StreamChunk.StreamType) {
+        guard !data.isEmpty else { return }
+
+        lock.lock()
+        switch stream {
+        case .standardOutput:
+            stdoutData.append(data)
+        case .standardError:
+            stderrData.append(data)
+        }
+        if let text = String(data: data, encoding: .utf8), !text.isEmpty {
+            chunks.append(.init(stream: stream, text: text))
+        }
+        lock.unlock()
+    }
+
+    func markFinished() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+
+        if finished {
+            return false
+        }
+        finished = true
+        return true
+    }
+
+    func output(exitCode: Int) -> CLICommandOutput {
+        lock.lock()
+        let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
+        let stderr = String(data: stderrData, encoding: .utf8) ?? ""
+        let outputChunks = chunks
+        lock.unlock()
+
+        return CLICommandOutput(
+            exitCode: exitCode,
+            stdout: stdout,
+            stderr: stderr,
+            executedAt: startedAt,
+            elapsed: Date().timeIntervalSince(startedAt),
+            arguments: arguments,
+            chunks: outputChunks
+        )
     }
 }

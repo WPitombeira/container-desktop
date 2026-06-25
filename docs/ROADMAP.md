@@ -2,7 +2,7 @@
 
 ## Short term (next milestones)
 
-- Wire all resource-list views to `ContainerStateStore` instead of placeholder rows.
+- Add richer inspect/detail panes for parser-backed resource rows.
 - Add persisted, user-configurable container binary path resolution.
 - Add parser-backed Docker Compose conversion (YAML support + validation messages).
 - Add explicit command copy-to-clipboard and safe dry-run mode.

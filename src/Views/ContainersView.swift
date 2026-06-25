@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContainersView: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @State private var searchText = ""
     @State private var selectedContainer: AuraContainer.ID?
 

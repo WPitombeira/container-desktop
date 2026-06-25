@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LogsView: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @State private var searchText = ""
 
     var body: some View {

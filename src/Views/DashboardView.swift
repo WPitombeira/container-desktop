@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @ObservedObject var engine: AuraEngine
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
 
     var body: some View {
         ScrollView {

@@ -1,7 +1,7 @@
 import Foundation
 
 struct AuraContainer: Identifiable, Hashable {
-    let id = UUID()
+    let id: String
     let name: String
     let image: String
     let status: AuraRuntimeStatus
@@ -12,7 +12,7 @@ struct AuraContainer: Identifiable, Hashable {
 }
 
 struct AuraImage: Identifiable, Hashable {
-    let id = UUID()
+    let id: String
     let name: String
     let tag: String
     let size: String
@@ -20,7 +20,7 @@ struct AuraImage: Identifiable, Hashable {
 }
 
 struct AuraVolume: Identifiable, Hashable {
-    let id = UUID()
+    let id: String
     let name: String
     let mountPoint: String
     let reclaimPolicy: String
@@ -28,7 +28,7 @@ struct AuraVolume: Identifiable, Hashable {
 }
 
 struct AuraNetwork: Identifiable, Hashable {
-    let id = UUID()
+    let id: String
     let name: String
     let driver: String
     let scope: String
@@ -36,10 +36,17 @@ struct AuraNetwork: Identifiable, Hashable {
 }
 
 struct AuraLogEntry: Identifiable, Hashable {
-    let id = UUID()
+    let id: String
     let timestamp: Date
     let level: AuraLogLevel
     let message: String
+
+    init(id: String = UUID().uuidString, timestamp: Date, level: AuraLogLevel, message: String) {
+        self.id = id
+        self.timestamp = timestamp
+        self.level = level
+        self.message = message
+    }
 }
 
 enum AuraRuntimeStatus: String, CaseIterable, Codable {

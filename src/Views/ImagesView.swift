@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ImagesView: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @State private var searchText = ""
 
     var body: some View {
@@ -22,12 +22,12 @@ struct ImagesView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Pull") {
-                    store.appendLog("Image pull action is waiting for service wiring.")
+                    store.appendLog("Image pull is not implemented yet; use the CLI command path for now.", level: .warning)
                 }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Remove") {
-                    store.appendLog("Image removal is waiting for service wiring.")
+                    store.appendLog("Image removal is not implemented yet; use the CLI command path for now.", level: .warning)
                 }
             }
         }

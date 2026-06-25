@@ -37,7 +37,7 @@ The UI writes process output to a local log buffer and updates status flags.
 
 ## Known implementation constraints
 
-- Resource-list UI still contains placeholder data while the richer `ContainerStateStore` is integrated into every view.
+- Resource-list UI is backed by `ContainerStateStore` and parser output from local `container` CLI commands.
 - Converter currently covers common `docker run` flags and simplified service rows, not full Compose YAML.
 - Packaging scripts produce local unsigned bundles; notarized distribution still needs signing credentials and CI.
 

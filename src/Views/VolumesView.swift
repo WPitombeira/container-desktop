@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct VolumesView: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @State private var searchText = ""
 
     var body: some View {
@@ -23,12 +23,12 @@ struct VolumesView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Create") {
-                    store.appendLog("Volume create action is waiting for service wiring.")
+                    store.appendLog("Volume creation is not implemented yet; use the CLI command path for now.", level: .warning)
                 }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Prune") {
-                    store.appendLog("Volume prune action is waiting for service wiring.")
+                    store.appendLog("Volume pruning is not implemented yet; use the CLI command path for now.", level: .warning)
                 }
             }
         }

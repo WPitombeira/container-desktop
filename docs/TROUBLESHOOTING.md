@@ -48,15 +48,14 @@ The current converter path is explicitly marked MVP and simplified.
 - check that the command path and working directory are accessible.
 - if using third-party wrappers, run the same command directly in Terminal first.
 
-## SwiftPM tests fail during codesign
+## SwiftPM tests fail during codesign on external volumes
 
 On some external or migrated volumes, macOS may attach `com.apple.provenance`
 metadata to generated `.xctest` bundles. If `swift test` fails with
-`resource fork, Finder information, or similar detritus not allowed`, clear the
-attribute from the generated bundle and run the already-built tests:
+`resource fork, Finder information, or similar detritus not allowed`, build the
+test bundle in a temporary local path:
 
 ```bash
-xattr -rd com.apple.provenance .build/out/Products/Debug/AuraTests.xctest
-codesign --force --sign - --timestamp=none .build/out/Products/Debug/AuraTests.xctest
-swift test --skip-build
+CLANG_MODULE_CACHE_PATH=/private/tmp/aura-module-cache \
+  swift test --jobs 1 --build-path /private/tmp/aura-swiftpm-test-build
 ```

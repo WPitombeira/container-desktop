@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct NetworksView: View {
-    @ObservedObject var store: AuraPlaceholderStore
+    @ObservedObject var store: AuraRuntimeStore
     @State private var searchText = ""
 
     var body: some View {
@@ -21,12 +21,12 @@ struct NetworksView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Create") {
-                    store.appendLog("Network create action is waiting for service wiring.")
+                    store.appendLog("Network creation is not implemented yet; use the CLI command path for now.", level: .warning)
                 }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Inspect") {
-                    store.appendLog("Network inspection action is waiting for service wiring.")
+                    store.appendLog("Network inspection is not implemented yet; use the CLI command path for now.", level: .warning)
                 }
             }
         }
