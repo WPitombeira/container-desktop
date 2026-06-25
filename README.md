@@ -1,12 +1,14 @@
 # Container Desktop
 
-Container Desktop is an open-source macOS SwiftUI app that wraps Apple’s `container` CLI in a small GUI, helping developers manage local container workflows without Docker Desktop’s heavier background stack.
+Container Desktop is an open-source macOS SwiftUI app that wraps Apple's [`container`](https://github.com/apple/container) CLI in a small GUI, helping developers manage local container workflows without Docker Desktop's heavier background stack.
+
+Native macOS GUI for Apple's container CLI. A lightweight Docker Desktop alternative for Apple silicon Macs on macOS 26+.
 
 ## Purpose
 
 Container Desktop provides:
 
-- A native macOS control surface for Apple `container` commands
+- A native macOS control surface for Apple's [`container`](https://github.com/apple/container) commands
 - A lightweight dashboard for command output and local runtime status
 - Operational views for containers, images, volumes, networks, logs, converter, and settings
 - A conversion workflow for common `docker run` flags and simplified Compose service models
@@ -28,10 +30,10 @@ That design is intended to keep memory/CPU overhead lower than Docker Desktop-st
 - Apple silicon Mac running macOS 26.0+
 - Xcode / Swift toolchain with the macOS 26 SDK
 - Swift 5.9+
-- Apple's **`container` CLI** installed and reachable by the app through a standard path or `PATH`
+- Apple's **[`container` CLI](https://github.com/apple/container)** installed and reachable by the app through a standard path or `PATH`
 - Optional: command-line developer tooling (`git`, `swift`) for source builds
 
-Container Desktop inherits Apple's `container` requirements. It is not intended to run on macOS 25 or earlier because Apple `container` depends on macOS 26 virtualization and networking features.
+Container Desktop inherits Apple's [`container`](https://github.com/apple/container) requirements. It is not intended to run on macOS 25 or earlier because Apple `container` depends on macOS 26 virtualization and networking features.
 
 The app resolves `container` from common install paths plus the process `PATH` (`/usr/bin`, `/usr/local/bin`, `/opt/homebrew/bin`, `/opt/local/bin`, and PATH-derived candidates).
 
@@ -57,7 +59,7 @@ For a local unsigned release archive:
 
 ### Apple Container CLI requirement
 
-Make sure the CLI is installed and accessible:
+Install Apple's [`container`](https://github.com/apple/container) tool first, then make sure the CLI is accessible:
 
 ```bash
 container --version
