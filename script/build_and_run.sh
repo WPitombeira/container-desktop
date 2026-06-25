@@ -121,7 +121,7 @@ case "$MODE" in
     ;;
   --verify)
     open_app
-    /usr/bin/sleep 1
+    /bin/sleep 1
     if /usr/bin/pgrep -x "$PRODUCT_NAME" >/dev/null; then
       /usr/bin/pgrep -x "$PRODUCT_NAME" | /usr/bin/xargs -n 1 echo
       exit 0

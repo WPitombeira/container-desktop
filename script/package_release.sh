@@ -71,6 +71,15 @@ write_info_plist() {
 PLIST
 }
 
+kill_existing() {
+  local names=("$PRODUCT_NAME" "$BUNDLE_NAME" "Container Desktop")
+  local name
+
+  for name in "${names[@]}"; do
+    /usr/bin/pkill -x "$name" >/dev/null 2>&1 || true
+  done
+}
+
 /usr/bin/swift build --configuration release
 BUILD_BIN_DIR="$(/usr/bin/swift build --show-bin-path --configuration release)"
 BUILT_BINARY="$BUILD_BIN_DIR/$PRODUCT_NAME"
@@ -79,6 +88,7 @@ if [[ ! -x "$BUILT_BINARY" ]]; then
   exit 1
 fi
 
+kill_existing
 rm -rf "$APP_BUNDLE" "$RELEASE_DIR"
 mkdir -p "$APP_MACOS" "$RELEASE_DIR"
 /bin/cp "$BUILT_BINARY" "$APP_BINARY"
