@@ -1,0 +1,13 @@
+import Foundation
+
+// This file is required for macOS apps that need to run shell commands.
+// In a real Xcode project, this would be an .entitlements file.
+// For this package, we are documenting the requirement.
+/*
+ <dict>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+ </dict>
+*/
