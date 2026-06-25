@@ -13,7 +13,7 @@ Environment overrides:
   CONTAINER_DESKTOP_PRODUCT_NAME       SwiftPM executable product name (default: ContainerDesktop)
   CONTAINER_DESKTOP_BUNDLE_NAME        Bundle name to stage in dist/ (default: Container Desktop)
   CONTAINER_DESKTOP_BUNDLE_ID          Bundle identifier (default: com.wpitombeira.containerdesktop)
-  CONTAINER_DESKTOP_MIN_SYSTEM_VERSION Minimum macOS version (default: 14.0)
+  CONTAINER_DESKTOP_MIN_SYSTEM_VERSION Minimum macOS version (default: 26.0)
 USAGE
 }
 
@@ -32,7 +32,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PRODUCT_NAME="${CONTAINER_DESKTOP_PRODUCT_NAME:-${AURA_PRODUCT_NAME:-ContainerDesktop}}"
 BUNDLE_NAME="${CONTAINER_DESKTOP_BUNDLE_NAME:-${AURA_BUNDLE_NAME:-Container Desktop}}"
 BUNDLE_ID="${CONTAINER_DESKTOP_BUNDLE_ID:-${AURA_BUNDLE_ID:-com.wpitombeira.containerdesktop}}"
-MIN_SYSTEM_VERSION="${CONTAINER_DESKTOP_MIN_SYSTEM_VERSION:-${AURA_MIN_SYSTEM_VERSION:-14.0}}"
+MIN_SYSTEM_VERSION="${CONTAINER_DESKTOP_MIN_SYSTEM_VERSION:-${AURA_MIN_SYSTEM_VERSION:-26.0}}"
 
 DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$BUNDLE_NAME.app"

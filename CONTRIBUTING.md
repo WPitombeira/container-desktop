@@ -18,6 +18,8 @@ Thanks for taking the time to contribute. This repo keeps scope narrow and pract
 
 ## Local setup
 
+Development requires an Apple silicon Mac running macOS 26.0+ with a Swift toolchain that includes the macOS 26 SDK. The app wraps Apple `container`, so lower macOS versions are outside the supported runtime target.
+
 ```bash
 git clone https://github.com/WPitombeira/container-desktop.git
 cd container-desktop
@@ -68,4 +70,3 @@ If you touch any process execution or command-building path, include:
 - Input validation plan
 - Potential injection or command-substitution risks
 - Error handling and user feedback updates
-

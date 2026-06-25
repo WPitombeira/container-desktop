@@ -10,6 +10,8 @@ Container Desktop is organized around operational macOS views:
 - Logs: inspect app-side activity
 - Settings: local preferences and runtime notes
 
+The app requires an Apple silicon Mac running macOS 26.0 or newer because it wraps Apple `container`.
+
 ## Running a command from Dashboard
 
 1. Open Container Desktop.

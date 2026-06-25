@@ -15,11 +15,12 @@ Container Desktop follows a simple three-layer structure:
 
 ## CLI contract
 
-At runtime, the app resolves a `container` binary from common install paths and `PATH`, then executes:
+At runtime, the app resolves Apple's `container` CLI from common install paths and `PATH`, then executes:
 
 `container <arguments>`
 
 The UI writes process output to a local log buffer and updates status flags.
+Because Apple's `container` CLI is supported only on Apple silicon Macs running macOS 26 or newer, Container Desktop uses macOS 26 as its package, bundle, and CI deployment floor.
 
 ## Data flow
 
@@ -37,6 +38,7 @@ The UI writes process output to a local log buffer and updates status flags.
 
 ## Known implementation constraints
 
+- Runtime support starts at Apple silicon + macOS 26. Older macOS releases are intentionally unsupported.
 - Resource-list UI is backed by `ContainerStateStore` and parser output from local `container` CLI commands.
 - Converter currently covers common `docker run` flags and simplified service rows, not full Compose YAML.
 - Packaging scripts produce local unsigned bundles; notarized distribution still needs signing credentials and CI.

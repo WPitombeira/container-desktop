@@ -2,6 +2,8 @@
 
 These scripts keep release prep local and low-friction for development.
 
+Release bundles target Apple silicon Macs running macOS 26.0 or newer, matching Apple `container` runtime support.
+
 ## Development run (`./script/build_and_run.sh`)
 
 Build + kill + run loop for the SwiftPM GUI app:
@@ -33,7 +35,7 @@ Override metadata with:
 - `CONTAINER_DESKTOP_PRODUCT_NAME` — SwiftPM executable name (default `ContainerDesktop`)
 - `CONTAINER_DESKTOP_BUNDLE_NAME` — staged `.app` name (default `Container Desktop`)
 - `CONTAINER_DESKTOP_BUNDLE_ID` — `Info.plist` `CFBundleIdentifier`
-- `CONTAINER_DESKTOP_MIN_SYSTEM_VERSION` — minimum macOS version
+- `CONTAINER_DESKTOP_MIN_SYSTEM_VERSION` — minimum macOS version (default `26.0`)
 - `CONTAINER_DESKTOP_PACKAGE_VERSION` — release version suffix (defaults to UTC date)
 
 Legacy `AURA_*` environment variables are still accepted as fallbacks for local scripts.

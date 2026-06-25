@@ -6,6 +6,7 @@
 
 **Checks:**
 
+- confirm you are on an Apple silicon Mac running macOS 26.0 or newer
 - run `container --version`
 - verify the binary is reachable by the app through a standard path or `PATH`
 - ensure the binary is executable:
@@ -16,6 +17,7 @@ which container
 
 ## App is not opening or crashes immediately
 
+- Confirm the Mac is running macOS 26.0 or newer. Earlier releases are outside the supported runtime floor for Apple `container`.
 - Rebuild in release mode:
 
 ```bash

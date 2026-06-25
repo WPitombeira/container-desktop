@@ -25,10 +25,13 @@ That design is intended to keep memory/CPU overhead lower than Docker Desktop-st
 
 ## Requirements
 
-- macOS 14.0+
+- Apple silicon Mac running macOS 26.0+
+- Xcode / Swift toolchain with the macOS 26 SDK
 - Swift 5.9+
-- Apple **`container` CLI** available (must be reachable by the app)
+- Apple's **`container` CLI** installed and reachable by the app through a standard path or `PATH`
 - Optional: command-line developer tooling (`git`, `swift`) for source builds
+
+Container Desktop inherits Apple's `container` requirements. It is not intended to run on macOS 25 or earlier because Apple `container` depends on macOS 26 virtualization and networking features.
 
 The app resolves `container` from common install paths plus the process `PATH` (`/usr/bin`, `/usr/local/bin`, `/opt/homebrew/bin`, `/opt/local/bin`, and PATH-derived candidates).
 
