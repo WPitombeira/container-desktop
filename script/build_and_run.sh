@@ -43,8 +43,11 @@ DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$BUNDLE_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
+APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$PRODUCT_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+ICON_FILE_NAME="ContainerDesktop.icns"
+ICON_SOURCE="$ROOT_DIR/assets/AppIcon/$ICON_FILE_NAME"
 
 kill_existing() {
   local names=("$PRODUCT_NAME" "$BUNDLE_NAME" "Container Desktop")
@@ -72,6 +75,8 @@ write_info_plist() {
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$BUNDLE_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>$ICON_FILE_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSMinimumSystemVersion</key>
@@ -97,9 +102,14 @@ build_and_stage() {
   fi
 
   rm -rf "$APP_BUNDLE"
-  mkdir -p "$APP_MACOS"
+  mkdir -p "$APP_MACOS" "$APP_RESOURCES"
   /bin/cp "$built_binary" "$APP_BINARY"
   /bin/chmod +x "$APP_BINARY"
+  if [[ ! -f "$ICON_SOURCE" ]]; then
+    echo "App icon not found: $ICON_SOURCE" >&2
+    exit 1
+  fi
+  /bin/cp "$ICON_SOURCE" "$APP_RESOURCES/$ICON_FILE_NAME"
   write_info_plist
 }
 

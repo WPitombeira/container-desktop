@@ -38,9 +38,12 @@ DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$BUNDLE_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
+APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$PRODUCT_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 RELEASE_DIR="$DIST_DIR/release"
+ICON_FILE_NAME="ContainerDesktop.icns"
+ICON_SOURCE="$ROOT_DIR/assets/AppIcon/$ICON_FILE_NAME"
 
 VERSION="${CONTAINER_DESKTOP_PACKAGE_VERSION:-${AURA_PACKAGE_VERSION:-$(date -u +%Y%m%d)}}"
 ARCHIVE_BASENAME="${BUNDLE_NAME}-macos-${VERSION}"
@@ -60,6 +63,8 @@ write_info_plist() {
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$BUNDLE_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>$ICON_FILE_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSMinimumSystemVersion</key>
@@ -90,13 +95,19 @@ fi
 
 kill_existing
 rm -rf "$APP_BUNDLE" "$RELEASE_DIR"
-mkdir -p "$APP_MACOS" "$RELEASE_DIR"
+mkdir -p "$APP_MACOS" "$APP_RESOURCES" "$RELEASE_DIR"
 /bin/cp "$BUILT_BINARY" "$APP_BINARY"
 /bin/chmod +x "$APP_BINARY"
+if [[ ! -f "$ICON_SOURCE" ]]; then
+  echo "App icon not found: $ICON_SOURCE" >&2
+  exit 1
+fi
+/bin/cp "$ICON_SOURCE" "$APP_RESOURCES/$ICON_FILE_NAME"
 write_info_plist
+/usr/bin/xattr -cr "$APP_BUNDLE" >/dev/null 2>&1 || true
 
 if [[ "$MODE" == "--zip" ]]; then
-  /usr/bin/ditto -c -k --keepParent "$APP_BUNDLE" "$ZIP_PATH"
+  /usr/bin/ditto -c -k --norsrc --keepParent "$APP_BUNDLE" "$ZIP_PATH"
   echo "Created $ZIP_PATH"
   exit 0
 fi
