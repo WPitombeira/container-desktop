@@ -143,7 +143,7 @@ public struct ContainerNetworkRow: Identifiable, Hashable, Sendable {
     public let name: String?
     public let driver: String?
     public let scope: String?
-    public let internal: String?
+    public let isInternal: String?
     public let attachable: String?
 
     public init(
@@ -151,14 +151,14 @@ public struct ContainerNetworkRow: Identifiable, Hashable, Sendable {
         name: String?,
         driver: String?,
         scope: String?,
-        internal: String?,
+        isInternal: String?,
         attachable: String?
     ) {
         self.id = id
         self.name = name
         self.driver = driver
         self.scope = scope
-        self.internal = internal
+        self.isInternal = isInternal
         self.attachable = attachable
     }
 }

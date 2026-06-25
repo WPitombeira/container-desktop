@@ -3,14 +3,12 @@ import Foundation
 public final class ContainerCLIPathResolver {
     public typealias ExecutableChecker = @Sendable (URL) -> Bool
 
-    private let fileManager: FileManager
-    private let environmentPaths: [String]
     private let additionalCandidates: [String]
     private let executableChecker: ExecutableChecker
+    private let candidateDirectories: [String]
 
     public init(
-        fileManager: FileManager = .default,
-        environmentPaths: [String]? = nil,
+        candidateDirectories: [String]? = nil,
         additionalCandidates: [String] = [
             "/usr/bin/container",
             "/usr/local/bin/container",
@@ -19,9 +17,8 @@ public final class ContainerCLIPathResolver {
         ],
         executableChecker: @escaping ExecutableChecker = { FileManager.default.isExecutableFile(atPath: $0.path) }
     ) {
-        self.fileManager = fileManager
-        self.environmentPaths = environmentPaths
-            ?? fileManager.currentDirectoryPath
+        self.candidateDirectories = candidateDirectories ??
+            (ProcessInfo.processInfo.environment["PATH"] ?? "")
                 .split(separator: ":")
                 .map(String.init)
         self.additionalCandidates = additionalCandidates
@@ -59,17 +56,8 @@ public final class ContainerCLIPathResolver {
     }
 
     private func envBinaryCandidates() -> [String] {
-        let pathEnv = ProcessInfo.processInfo.environment["PATH"] ?? ""
-        guard let envPaths = pathValues(from: pathEnv) else { return [] }
-        return envPaths
+        guard !candidateDirectories.isEmpty else { return [] }
+        return candidateDirectories
             .map { ($0 as NSString).appendingPathComponent("container") }
-    }
-
-    private func pathValues(from value: String) -> [String]? {
-        guard !value.isEmpty else { return nil }
-        return value
-            .split(separator: ":")
-            .map { String($0) }
-            .filter { !$0.isEmpty }
     }
 }

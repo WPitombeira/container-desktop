@@ -68,7 +68,7 @@ struct AuraShellView: View {
         case .dashboard:
             DashboardView(engine: engine, store: store)
         case .containers:
-        ContainersView(store: store)
+            ContainersView(store: store)
         case .images:
             ImagesView(store: store)
         case .volumes:

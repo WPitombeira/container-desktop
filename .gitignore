@@ -1,0 +1,30 @@
+# macOS and SwiftPM build artifacts
+/.build/
+/.swiftpm/
+/.buildcheck
+/Packages/
+/DerivedData/
+
+# Xcode metadata
+/*.xcodeproj
+/*.xcworkspace
+/xcuserdata/
+**/*.xcscheme
+*.xcuserstate
+
+# Derived output
+dist/
+/*.app
+/*.dmg
+/*.pkg
+
+# Logs and local environment
+*.log
+*.tmp
+*.swp
+*~
+.env
+
+# OS artifacts
+.DS_Store
+Thumbs.db

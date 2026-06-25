@@ -33,13 +33,21 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
             var stdoutData = Data()
             var stderrData = Data()
             var chunks: [CLICommandOutput.StreamChunk] = []
+            var finished = false
             let commandArguments = arguments
 
-            let finish: (Result<Int32, Error>) -> Void = { status in
+            let finish: (Int32) -> Void = { status in
+                self.lock.lock()
+                if finished {
+                    self.lock.unlock()
+                    return
+                }
+                finished = true
+                self.lock.unlock()
+
                 let elapsed = Date().timeIntervalSince(startedAt)
                 let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
                 let stderr = String(data: stderrData, encoding: .utf8) ?? ""
-
                 let output = CLICommandOutput(
                     exitCode: Int(status),
                     stdout: stdout,
@@ -53,6 +61,13 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
             }
 
             func fail(_ error: Error) {
+                self.lock.lock()
+                if finished {
+                    self.lock.unlock()
+                    return
+                }
+                finished = true
+                self.lock.unlock()
                 continuation.resume(throwing: ContainerCLIError.commandFailed(error.localizedDescription))
             }
 
@@ -90,34 +105,33 @@ public final class ContainerCommandRunner: ContainerCommandRunning, @unchecked S
                 stdoutPipe.fileHandleForReading.readabilityHandler = nil
                 stderrPipe.fileHandleForReading.readabilityHandler = nil
 
-                let stdoutRemainder = stdoutPipe.fileHandleForReading.readToEnd() ?? Data()
-                let stderrRemainder = stderrPipe.fileHandleForReading.readToEnd() ?? Data()
+                let stdoutRemainder = (try? stdoutPipe.fileHandleForReading.readToEnd()) ?? Data()
+                let stderrRemainder = (try? stderrPipe.fileHandleForReading.readToEnd()) ?? Data()
                 self.lock.lock()
                 stdoutData.append(stdoutRemainder)
                 stderrData.append(stderrRemainder)
+                let outputChunks = chunks
                 self.lock.unlock()
+                var updatedChunks = outputChunks
                 if let remaining = String(data: stdoutRemainder, encoding: .utf8), !remaining.isEmpty {
-                    chunks.append(.init(stream: .standardOutput, text: remaining))
+                    updatedChunks.append(.init(stream: .standardOutput, text: remaining))
                 }
                 if let remaining = String(data: stderrRemainder, encoding: .utf8), !remaining.isEmpty {
-                    chunks.append(.init(stream: .standardError, text: remaining))
+                    updatedChunks.append(.init(stream: .standardError, text: remaining))
                 }
+                self.lock.lock()
+                chunks = updatedChunks
+                self.lock.unlock()
 
-                if process.terminationReason != .exit {
-                    continuation.resume(
-                        returning: CLICommandOutput(
-                            exitCode: Int(process.terminationStatus),
-                            stdout: String(data: stdoutData, encoding: .utf8) ?? "",
-                            stderr: String(data: stderrData, encoding: .utf8) ?? "",
-                            executedAt: startedAt,
-                            elapsed: Date().timeIntervalSince(startedAt),
-                            arguments: arguments,
-                            chunks: chunks
-                        )
-                    )
+                if process.terminationReason == .exit {
+                    finish(process.terminationStatus)
                     return
                 }
-                finish(.success(process.terminationStatus))
+                if process.terminationStatus == 0 {
+                    finish(process.terminationStatus)
+                } else {
+                    finish(process.terminationStatus)
+                }
             }
 
             do {

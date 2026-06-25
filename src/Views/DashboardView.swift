@@ -40,6 +40,13 @@ struct DashboardView: View {
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Clear output") {
+                    engine.containerLogs = ""
+                }
+            }
+        }
     }
 
     @ViewBuilder

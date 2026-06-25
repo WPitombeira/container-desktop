@@ -55,11 +55,34 @@ struct ConverterView: View {
     }
 
     private func convertCommand() {
-        let mockImage = "nginx:latest"
-        let mockPorts = ["8080:80"]
-        let mockName = "web-service"
-        let args = ConversionService.convert(config: DockerConfig(image: mockImage, ports: mockPorts, name: mockName))
-        convertedCommand = "container " + args.joined(separator: " ")
+        let trimmedInput = dockerInput.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedInput.isEmpty else {
+            convertedCommand = "Conversion failed: paste a docker command before converting."
+                .capitalized
+            store.appendLog("Conversion skipped: input was empty.", level: .warning)
+            return
+        }
+
+        let result = ConversionService.convert(command: trimmedInput)
+
+        if !result.warnings.isEmpty {
+            result.warnings.forEach { store.appendLog("Converter warning: \($0)", level: .warning) }
+        }
+
+        if result.command.isEmpty {
+            let warningText = result.warnings.joined(separator: "\n")
+            convertedCommand = warningText.isEmpty
+                ? "Conversion failed."
+                : "Conversion failed.\n\(warningText)"
+            store.appendLog("Conversion failed for provided docker command.", level: .error)
+            return
+        }
+
+        convertedCommand = "container " + result.command.joined(separator: " ")
+        if !result.warnings.isEmpty {
+            convertedCommand += "\nWarnings:\n" + result.warnings.map { "• \($0)" }.joined(separator: "\n")
+        }
         store.appendLog("Converted docker input to Apple Container command.")
     }
 }

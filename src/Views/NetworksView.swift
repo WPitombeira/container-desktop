@@ -18,6 +18,18 @@ struct NetworksView: View {
             .padding(.vertical, 2)
         }
         .searchable(text: $searchText, prompt: "Search networks")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Create") {
+                    store.appendLog("Network create action is waiting for service wiring.")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Inspect") {
+                    store.appendLog("Network inspection action is waiting for service wiring.")
+                }
+            }
+        }
         .navigationTitle("Networks")
     }
 

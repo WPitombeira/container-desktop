@@ -14,6 +14,11 @@ let package = Package(
             name: "Aura",
             dependencies: [],
             path: "src"
+        ),
+        .testTarget(
+            name: "AuraTests",
+            dependencies: ["Aura"],
+            path: "Tests"
         )
     ]
 )

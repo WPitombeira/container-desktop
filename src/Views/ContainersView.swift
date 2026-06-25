@@ -43,6 +43,25 @@ struct ContainersView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "Search containers")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Start") {
+                        selectedContainer.map(store.startContainer)
+                    }
+                    .disabled(selectedContainer == nil)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Stop") {
+                        selectedContainer.map(store.stopContainer)
+                    }
+                    .disabled(selectedContainer == nil)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Remove Stopped") {
+                        store.removeCompletedContainers()
+                    }
+                }
+            }
             .onAppear {
                 if selectedContainer == nil, let first = filtered.first {
                     selectedContainer = first.id

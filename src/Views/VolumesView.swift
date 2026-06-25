@@ -20,6 +20,18 @@ struct VolumesView: View {
             .padding(.vertical, 2)
         }
         .searchable(text: $searchText, prompt: "Search volumes")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Create") {
+                    store.appendLog("Volume create action is waiting for service wiring.")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Prune") {
+                    store.appendLog("Volume prune action is waiting for service wiring.")
+                }
+            }
+        }
         .navigationTitle("Volumes")
     }
 

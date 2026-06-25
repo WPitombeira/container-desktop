@@ -19,6 +19,18 @@ struct ImagesView: View {
             .padding(.vertical, 2)
         }
         .searchable(text: $searchText, prompt: "Search images")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Pull") {
+                    store.appendLog("Image pull action is waiting for service wiring.")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Remove") {
+                    store.appendLog("Image removal is waiting for service wiring.")
+                }
+            }
+        }
         .navigationTitle("Images")
     }
 

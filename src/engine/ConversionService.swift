@@ -15,12 +15,23 @@ public struct DockerConfig {
 }
 
 public class ConversionService {
+    private static let dockerConversionService = DockerConversionService()
+
     public static func convert(config: DockerConfig) -> [String] {
-        var args = ["run", "--image", config.image]
-        for port in config.ports {
-            args.append(contentsOf: ["--port", port])
-        }
-        args.append(config.name)
-        return args
+        let service = ComposeServiceRow(
+            name: config.name,
+            image: config.image,
+            ports: config.ports
+        )
+        return dockerConversionService.convertComposeService(service).command
+    }
+
+    public static func convert(command: String) -> DockerConversionResult {
+        (try? dockerConversionService.convertDockerRunCommand(command)) ??
+            .init(command: [], warnings: ["Conversion failed."])
+    }
+
+    public static func convertForCLI(config: DockerConfig) -> [String] {
+        convert(config: config)
     }
 }

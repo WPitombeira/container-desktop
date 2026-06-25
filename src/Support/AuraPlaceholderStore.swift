@@ -107,19 +107,43 @@ final class AuraPlaceholderStore: ObservableObject {
     }
 
     func filteredContainers(_ query: String) -> [AuraContainer] {
-        applyFilter(containers, by: query)
+        guard !query.isEmpty else { return containers }
+        let lowered = query.lowercased()
+        return containers.filter { item in
+            "\(item.name) \(item.image) \(item.status.badgeLabel) \(item.ports.joined(separator: " "))"
+                .lowercased()
+                .contains(lowered)
+        }
     }
 
     func filteredImages(_ query: String) -> [AuraImage] {
-        applyFilter(images, by: query)
+        guard !query.isEmpty else { return images }
+        let lowered = query.lowercased()
+        return images.filter { item in
+            "\(item.name) \(item.tag) \(item.size)"
+                .lowercased()
+                .contains(lowered)
+        }
     }
 
     func filteredVolumes(_ query: String) -> [AuraVolume] {
-        applyFilter(volumes, by: query)
+        guard !query.isEmpty else { return volumes }
+        let lowered = query.lowercased()
+        return volumes.filter { item in
+            "\(item.name) \(item.mountPoint) \(item.reclaimPolicy) \(item.size)"
+                .lowercased()
+                .contains(lowered)
+        }
     }
 
     func filteredNetworks(_ query: String) -> [AuraNetwork] {
-        applyFilter(networks, by: query)
+        guard !query.isEmpty else { return networks }
+        let lowered = query.lowercased()
+        return networks.filter { item in
+            "\(item.name) \(item.driver) \(item.scope) \(item.subnet)"
+                .lowercased()
+                .contains(lowered)
+        }
     }
 
     func filteredLogs(_ query: String) -> [AuraLogEntry] {
@@ -145,9 +169,44 @@ final class AuraPlaceholderStore: ObservableObject {
         )
     }
 
-    private func applyFilter<T: Hashable>(_ items: [T], by query: String) -> [T] where T: CustomStringConvertible {
-        guard !query.isEmpty else { return items }
-        let lowered = query.lowercased()
-        return items.filter { String(describing: $0).lowercased().contains(lowered) }
+    func startContainer(_ id: AuraContainer.ID) {
+        guard let index = containers.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        let target = containers[index]
+        containers[index] = AuraContainer(
+            name: target.name,
+            image: target.image,
+            status: .running,
+            ports: target.ports,
+            cpu: max(target.cpu, 0.01),
+            memory: target.memory == "0 MB" ? "8 MB" : target.memory,
+            startedAt: Date()
+        )
+        appendLog("Started container '\(target.name)'.")
+    }
+
+    func stopContainer(_ id: AuraContainer.ID) {
+        guard let index = containers.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        let target = containers[index]
+        containers[index] = AuraContainer(
+            name: target.name,
+            image: target.image,
+            status: .stopped,
+            ports: target.ports,
+            cpu: 0,
+            memory: "0 MB",
+            startedAt: target.startedAt
+        )
+        appendLog("Stopped container '\(target.name)'.")
+    }
+
+    func removeCompletedContainers() {
+        let before = containers.count
+        containers.removeAll { $0.status == .stopped || $0.status == .unhealthy }
+        let removed = before - containers.count
+        appendLog(removed > 0 ? "Removed \(removed) finished containers." : "No containers to remove.")
     }
 }

@@ -30,12 +30,12 @@ public struct ContainerOutputParser {
 
     public func parseImages(from text: String) -> [ContainerImageRow] {
         parseRows(from: text, kind: .image).compactMap { row in
-            guard let id = row["id"] ?? row["imageid"] else { return nil }
+            guard let id = row["id"] ?? row["imageid"] ?? row["digest"] else { return nil }
             return ContainerImageRow(
                 id: id,
-                repository: row["repository"] ?? row["repo"],
+                repository: row["repository"] ?? row["repo"] ?? row["image"],
                 tag: row["tag"],
-                digest: row["digest"] ?? row["imageid"]?.description,
+                digest: row["digest"] ?? row["imageid"],
                 size: row["size"],
                 created: row["created"]
             )
@@ -63,7 +63,7 @@ public struct ContainerOutputParser {
                 name: row["name"],
                 driver: row["driver"],
                 scope: row["scope"],
-                internal: row["internal"],
+                isInternal: row["internal"],
                 attachable: row["attachable"]
             )
         }
@@ -71,75 +71,127 @@ public struct ContainerOutputParser {
 
     private func parseRows(from text: String, kind: ContainerOutputKind) -> [[String: String]] {
         let sanitized = sanitize(text)
-        guard let jsonRows = parseJSONRows(from: sanitized) else {
-            return parseTableRows(from: sanitized, kind: kind)
+        if let jsonRows = parseJSONRows(from: sanitized) {
+            return jsonRows
         }
-        return jsonRows
+        if let pipeRows = parsePipeRows(from: sanitized, kind: kind) {
+            return pipeRows
+        }
+        return parseFixedWidthRows(from: sanitized, kind: kind)
     }
 
     private func parseJSONRows(from text: String) -> [[String: String]]? {
-        guard let data = text.data(using: .utf8) else { return nil }
-        guard
-            let root = try? JSONSerialization.jsonObject(with: data),
-            let list = root as? [[String: Any]]
+        guard let data = text.data(using: .utf8),
+              let root = try? JSONSerialization.jsonObject(with: data)
         else { return nil }
-        return list.compactMap { dictionary in
-            var normalized: [String: String] = [:]
-            for (key, value) in dictionary {
-                guard let text = valueText(value) else { continue }
-                normalized[key.normalizedKey()] = text
-            }
-            return normalized
+
+        if let rows = root as? [[String: Any]] {
+            return rows.compactMap(normalizeJSONObject)
         }
+
+        if let wrapper = root as? [String: Any] {
+            if let items = wrapper["containers"] as? [[String: Any]] {
+                return items.compactMap(normalizeJSONObject)
+            }
+            if let items = wrapper["images"] as? [[String: Any]] {
+                return items.compactMap(normalizeJSONObject)
+            }
+            if let items = wrapper["volumes"] as? [[String: Any]] {
+                return items.compactMap(normalizeJSONObject)
+            }
+            if let items = wrapper["networks"] as? [[String: Any]] {
+                return items.compactMap(normalizeJSONObject)
+            }
+        }
+        return nil
     }
 
-    private func parseTableRows(from text: String, kind: ContainerOutputKind) -> [[String: String]] {
-        let lines = text
-            .components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+    private func parsePipeRows(from text: String, kind: ContainerOutputKind) -> [[String: String]]? {
+        let lines = normalizedLines(from: text)
+        guard let headerIndex = lines.firstIndex(where: { hasHeader($0, kind: kind) && $0.contains("|") }) else {
+            return nil
+        }
 
+        let header = splitPipeLine(lines[headerIndex]).map { $0.normalizedKey() }
+        if header.isEmpty { return nil }
+
+        let rawRows = lines[(headerIndex + 1)...].filter { !$0.isEmpty && !$0.hasPrefix("---") }
+        var parsedRows: [[String: String]] = []
+
+        for row in rawRows {
+            let values = splitPipeLine(row)
+            guard !values.isEmpty else { continue }
+            if values.count == 1 && values[0].isEmpty { continue }
+
+            var parsed: [String: String] = [:]
+            for index in values.indices where index < header.count {
+                let value = values[index].trimmingCharacters(in: .whitespacesAndNewlines)
+                if !value.isEmpty {
+                    parsed[header[index]] = value
+                }
+            }
+            if !parsed.isEmpty { parsedRows.append(parsed) }
+        }
+
+        return parsedRows
+    }
+
+    private func parseFixedWidthRows(from text: String, kind: ContainerOutputKind) -> [[String: String]] {
+        let lines = normalizedLines(from: text)
         guard let headerIndex = lines.firstIndex(where: { hasHeader($0, kind: kind) }) else {
             return []
         }
 
-        let headerLine = lines[headerIndex]
-        let headerColumns = headerColumns(from: headerLine)
-        let starts = headerColumns.map(\.start)
-        let rows = Array(lines[(headerIndex + 1)...])
+        let columns = headerColumns(from: lines[headerIndex])
+        if columns.isEmpty { return [] }
+        let starts = columns.map(\.start)
+        let body = lines[(headerIndex + 1)...].filter { !$0.hasPrefix("---") && !$0.isEmpty }
 
-        let meaningful = rows.filter { row in
-            !row.contains("----") && !row.hasPrefix("----")
-        }
-
-        return meaningful.compactMap { row in
+        return body.compactMap { line in
             var parsed: [String: String] = [:]
-            for index in headerColumns.indices {
+            for index in columns.indices {
                 let start = starts[index]
-                let end = index + 1 < headerColumns.count ? starts[index + 1] : row.utf16.count
-                let tokenRange = start..<min(end, row.utf16.count)
-                let raw = token(from: row, range: tokenRange).trimmingCharacters(in: .whitespaces)
-                if !raw.isEmpty {
-                    parsed[headerColumns[index].name] = raw
+                if start >= line.utf16.count { continue }
+                let end = index + 1 < columns.count ? starts[index + 1] : line.utf16.count
+                let value = substring(line, from: start, to: min(end, line.utf16.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if !value.isEmpty {
+                    parsed[columns[index].name] = value
                 }
             }
-            return parsed
+            return parsed.isEmpty ? nil : parsed
         }
     }
 
     private func hasHeader(_ line: String, kind: ContainerOutputKind) -> Bool {
-        let keys = requiredHeaderAliases(for: kind).flatMap { $0 }
-        let lower = line.lowercased()
-        let tokenized = Set(lower.split { $0.isWhitespace }.map(String.init).map { $0.normalizedKey() })
-        let matches = keys.filter { tokenized.contains($0) }
-        return matches.count >= 1 && tokenized.count >= 2
+        let aliases = Set(requiredHeaderAliases(for: kind).flatMap { $0 })
+        let tokenized = Set(
+            line
+                .lowercased()
+                .split(whereSeparator: \.isWhitespace)
+                .map(String.init)
+                .map { $0.normalizedKey() }
+        )
+        return !aliases.intersection(tokenized).isEmpty
+    }
+
+    private func normalizedLines(from text: String) -> [String] {
+        sanitize(text)
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && !$0.allSatisfy { $0 == "-" } }
+    }
+
+    private func splitPipeLine(_ line: String) -> [String] {
+        line
+            .split(separator: "|")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
     }
 
     private func splitPorts(_ value: String?) -> [String] {
         guard let value else { return [] }
-        let separatorSet = CharacterSet(charactersIn: ",")
         return value
-            .split(whereSeparator: separatorSet.contains)
+            .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
     }
@@ -152,28 +204,18 @@ public struct ContainerOutputParser {
         )
     }
 
-    private func parseJSONRows(from text: String) -> [[String: String]]? {
-        guard let data = text.data(using: .utf8) else { return nil }
-        guard
-            let container = try? JSONSerialization.jsonObject(with: data),
-            let list = container as? [[String: Any]]
-        else {
-            return nil
+    private func normalizeJSONObject(_ item: [String: Any]) -> [String: String]? {
+        var normalized: [String: String] = [:]
+        for (key, value) in item {
+            guard let stringValue = valueText(value) else { continue }
+            normalized[key.normalizedKey()] = stringValue
         }
-        return list.compactMap { dictionary in
-            var normalized: [String: String] = [:]
-            for (key, value) in dictionary {
-                if let stringValue = valueText(value) {
-                    normalized[key.normalizedKey()] = stringValue
-                }
-            }
-            return normalized
-        }
+        return normalized.isEmpty ? nil : normalized
     }
 
     private func valueText(_ value: Any) -> String? {
-        if let string = value as? String {
-            return string
+        if let text = value as? String {
+            return text
         }
         if let number = value as? NSNumber {
             return number.stringValue
@@ -182,44 +224,68 @@ public struct ContainerOutputParser {
     }
 
     private func headerColumns(from headerLine: String) -> [(name: String, start: Int)] {
-        let normalized = headerLine
-            .split(whereSeparator: \.isWhitespace)
-            .map { String($0).normalizedKey() }
+        guard let regex = try? NSRegularExpression(pattern: "\\S+") else { return [] }
+        let matches = regex.matches(
+            in: headerLine,
+            range: NSRange(location: 0, length: headerLine.utf16.count)
+        )
 
-        var ranges: [String: Int] = [:]
-        let ns = headerLine as NSString
-        var anchors: [Int] = []
-        for column in normalized {
-            if let match = ns.range(of: column, options: .caseInsensitive, range: NSRange(location: 0, length: ns.length))?.location,
-               match != NSNotFound {
-                ranges[column] = match
+        let tokens = matches.compactMap { match -> (String, Int)? in
+            guard let range = Range(match.range, in: headerLine) else { return nil }
+            let token = String(headerLine[range]).normalizedKey()
+            return (token, match.range.location)
+        }
+        if tokens.isEmpty { return [] }
+
+        let twoWordMerges: Set<String> = ["containerid", "imageid", "networkid", "volumeid"]
+        var columns: [(String, Int)] = []
+        var index = 0
+        while index < tokens.count {
+            if index + 1 < tokens.count {
+                let pair = tokens[index].0 + tokens[index + 1].0
+                if twoWordMerges.contains(pair) {
+                    columns.append((pair, tokens[index].1))
+                    index += 2
+                    continue
+                }
             }
+            columns.append(tokens[index])
+            index += 1
         }
 
-        return zip(normalized, normalized.compactMap { ranges[$0] })
-            .map { name, start in (name: name, start: start) }
+        return columns
     }
 
     private func requiredHeaderAliases(for kind: ContainerOutputKind) -> [[String]] {
         switch kind {
         case .container:
-            return [["id", "containerid"], ["name"], ["image"], ["status"], ["state"], ["ports"], ["created"], ["command"]]
+            return [["container", "containerid", "id"], ["name"], ["image"], ["status"], ["state"], ["ports"], ["created"], ["command"]]
         case .image:
             return [["imageid", "id"], ["repository", "repo", "image"], ["tag"], ["size"], ["created"]]
         case .volume:
-            return [["name", "volume", "volumeid"], ["driver"], ["scope"], ["mountpoint", "mount"]]
+            return [["volume", "name", "volumeid"], ["driver"], ["scope"], ["mountpoint", "mount"]]
         case .network:
-            return [["name", "network"], ["driver"], ["scope"], ["internal"], ["attachable"]]
+            return [["name", "network", "networkid"], ["driver"], ["scope"], ["internal"], ["attachable"]]
         }
     }
 
-    private func token(from row: String, range: Range<Int>) -> String {
-        guard let start = row.utf16.index(row.utf16.startIndex, offsetBy: range.lowerBound, limitedBy: row.utf16.endIndex),
-              let end = row.utf16.index(row.utf16.startIndex, offsetBy: range.upperBound, limitedBy: row.utf16.endIndex),
-              let stringRange = Range(start..<end, in: row) else {
-            return ""
-        }
-        return String(row[stringRange])
+    private func substring(_ line: String, from start: Int, to end: Int) -> String {
+        guard
+            let start16 = line.utf16.index(
+                line.utf16.startIndex,
+                offsetBy: start,
+                limitedBy: line.utf16.endIndex
+            ),
+            let end16 = line.utf16.index(
+                line.utf16.startIndex,
+                offsetBy: end,
+                limitedBy: line.utf16.endIndex
+            ),
+            let startIndex = start16.samePosition(in: line),
+            let endIndex = end16.samePosition(in: line),
+            startIndex <= endIndex
+        else { return "" }
+        return String(line[startIndex..<endIndex])
     }
 }
 
