@@ -21,7 +21,3 @@
 - Optional remote context support
 - Extension points for compose profiles and advanced networking flags
 - Hardened packaging and release automation metadata
-
-## Compatibility note
-
-The package/product is currently named `Aura` in `Package.swift`. This is tracked separately from the public-facing product name **Container Desktop**, and will likely be renamed as a follow-up metadata/code change.

@@ -2,8 +2,6 @@
 
 Container Desktop is an open-source macOS SwiftUI app that wraps Apple’s `container` CLI in a small GUI, helping developers manage local container workflows without Docker Desktop’s heavier background stack.
 
-This repository currently builds and ships the app target as **Aura** in `Package.swift`; for users and documentation we refer to the product as **Container Desktop**. A compatibility note is included to avoid confusion while the package metadata is aligned.
-
 ## Purpose
 
 Container Desktop provides:
@@ -93,7 +91,7 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for full details.
 
 Common issues:
 
-- **`container` not found**: check installation and `/usr/local/bin` resolution.
+- **`container` not found**: check installation and PATH resolution.
 - **Command exits with non-zero code**: inspect in-app logs and run the equivalent command in Terminal to isolate flags/path/permission issues.
 - **No log output**: validate that the command writes to stdout/stderr and that sandbox restrictions are not blocking process execution.
 - **Converter output seems wrong**: conversion logic is still evolving; verify every generated command manually.
@@ -113,7 +111,7 @@ See [SECURITY.md](SECURITY.md) for reporting guidance.
 - `src/` — SwiftUI app and conversion logic
 - `docs/` — documentation set (architecture, usage, troubleshooting, roadmap)
 - `Tests/` — SwiftPM tests for conversion, parsing, CLI discovery, and command models
-- `Package.swift` — Swift package definition (`Aura` product today)
+- `Package.swift` — Swift package definition (`ContainerDesktop` executable product)
 
 ## Contributing
 

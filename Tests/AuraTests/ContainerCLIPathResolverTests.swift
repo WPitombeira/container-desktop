@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import Aura
+@testable import ContainerDesktop
 
 final class ContainerCLIPathResolverTests: XCTestCase {
     func testDiscoverUsesInjectedCandidateDirectory() async throws {

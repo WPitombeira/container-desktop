@@ -10,10 +10,10 @@ Builds a release SwiftPM app bundle into dist/, then creates:
   --dmg   a local unsigned .dmg archive
 
 Environment overrides:
-  AURA_PRODUCT_NAME     SwiftPM executable product name (default: Aura)
-  AURA_BUNDLE_NAME      Bundle name to stage in dist/ (default: Aura)
-  AURA_BUNDLE_ID        Bundle identifier for Info.plist (default: com.container.desktop.aura)
-  AURA_MIN_SYSTEM_VERSION Minimum macOS version for Info.plist (default: 14.0)
+  CONTAINER_DESKTOP_PRODUCT_NAME       SwiftPM executable product name (default: ContainerDesktop)
+  CONTAINER_DESKTOP_BUNDLE_NAME        Bundle name to stage in dist/ (default: Container Desktop)
+  CONTAINER_DESKTOP_BUNDLE_ID          Bundle identifier (default: com.wpitombeira.containerdesktop)
+  CONTAINER_DESKTOP_MIN_SYSTEM_VERSION Minimum macOS version (default: 14.0)
 USAGE
 }
 
@@ -29,10 +29,10 @@ if [[ "$MODE" != "--zip" && "$MODE" != "--dmg" ]]; then
 fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PRODUCT_NAME="${AURA_PRODUCT_NAME:-Aura}"
-BUNDLE_NAME="${AURA_BUNDLE_NAME:-$PRODUCT_NAME}"
-BUNDLE_ID="${AURA_BUNDLE_ID:-com.container.desktop.aura}"
-MIN_SYSTEM_VERSION="${AURA_MIN_SYSTEM_VERSION:-14.0}"
+PRODUCT_NAME="${CONTAINER_DESKTOP_PRODUCT_NAME:-${AURA_PRODUCT_NAME:-ContainerDesktop}}"
+BUNDLE_NAME="${CONTAINER_DESKTOP_BUNDLE_NAME:-${AURA_BUNDLE_NAME:-Container Desktop}}"
+BUNDLE_ID="${CONTAINER_DESKTOP_BUNDLE_ID:-${AURA_BUNDLE_ID:-com.wpitombeira.containerdesktop}}"
+MIN_SYSTEM_VERSION="${CONTAINER_DESKTOP_MIN_SYSTEM_VERSION:-${AURA_MIN_SYSTEM_VERSION:-14.0}}"
 
 DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$BUNDLE_NAME.app"
@@ -42,7 +42,7 @@ APP_BINARY="$APP_MACOS/$PRODUCT_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 RELEASE_DIR="$DIST_DIR/release"
 
-VERSION="${AURA_PACKAGE_VERSION:-$(date -u +%Y%m%d)}"
+VERSION="${CONTAINER_DESKTOP_PACKAGE_VERSION:-${AURA_PACKAGE_VERSION:-$(date -u +%Y%m%d)}}"
 ARCHIVE_BASENAME="${BUNDLE_NAME}-macos-${VERSION}"
 ZIP_PATH="$RELEASE_DIR/${ARCHIVE_BASENAME}.zip"
 DMG_PATH="$RELEASE_DIR/${ARCHIVE_BASENAME}.dmg"

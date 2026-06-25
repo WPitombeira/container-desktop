@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "Aura",
+    name: "ContainerDesktop",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "Aura", targets: ["Aura"])
+        .executable(name: "ContainerDesktop", targets: ["ContainerDesktop"])
     ],
     targets: [
         .executableTarget(
-            name: "Aura",
+            name: "ContainerDesktop",
             dependencies: [],
             path: "src"
         ),
         .testTarget(
-            name: "AuraTests",
-            dependencies: ["Aura"],
+            name: "ContainerDesktopTests",
+            dependencies: ["ContainerDesktop"],
             path: "Tests"
         )
     ]

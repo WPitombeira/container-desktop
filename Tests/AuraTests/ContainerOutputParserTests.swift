@@ -1,5 +1,5 @@
 import XCTest
-@testable import Aura
+@testable import ContainerDesktop
 
 final class ContainerOutputParserTests: XCTestCase {
     func testParsesJSONContainerRows() {

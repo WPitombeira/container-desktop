@@ -62,7 +62,7 @@ struct AuraShellView: View {
             }
         }
         .listStyle(.sidebar)
-        .navigationTitle("Aura")
+        .navigationTitle("Container Desktop")
     }
 
     @ViewBuilder

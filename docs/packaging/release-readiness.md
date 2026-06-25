@@ -14,12 +14,7 @@ Build + kill + run loop for the SwiftPM GUI app:
 ./script/build_and_run.sh --debug          # launch binary under LLDB
 ```
 
-By default, the bundle is staged to `dist/Aura.app`.
-To stage a legacy `dist/Container Desktop.app` locally, set:
-
-```bash
-AURA_BUNDLE_NAME="Container Desktop" ./script/build_and_run.sh
-```
+By default, the bundle is staged to `dist/Container Desktop.app`.
 
 ## Local release artifacts (`./script/package_release.sh`)
 
@@ -35,10 +30,12 @@ Examples:
 
 Override metadata with:
 
-- `AURA_PRODUCT_NAME` — SwiftPM executable name (default `Aura`)
-- `AURA_BUNDLE_NAME` — staged `.app` name
-- `AURA_BUNDLE_ID` — `Info.plist` `CFBundleIdentifier`
-- `AURA_MIN_SYSTEM_VERSION` — minimum macOS version
-- `AURA_PACKAGE_VERSION` — release version suffix (defaults to UTC date)
+- `CONTAINER_DESKTOP_PRODUCT_NAME` — SwiftPM executable name (default `ContainerDesktop`)
+- `CONTAINER_DESKTOP_BUNDLE_NAME` — staged `.app` name (default `Container Desktop`)
+- `CONTAINER_DESKTOP_BUNDLE_ID` — `Info.plist` `CFBundleIdentifier`
+- `CONTAINER_DESKTOP_MIN_SYSTEM_VERSION` — minimum macOS version
+- `CONTAINER_DESKTOP_PACKAGE_VERSION` — release version suffix (defaults to UTC date)
+
+Legacy `AURA_*` environment variables are still accepted as fallbacks for local scripts.
 
 No notarization credentials are required for either output.

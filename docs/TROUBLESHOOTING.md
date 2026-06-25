@@ -56,6 +56,6 @@ metadata to generated `.xctest` bundles. If `swift test` fails with
 test bundle in a temporary local path:
 
 ```bash
-CLANG_MODULE_CACHE_PATH=/private/tmp/aura-module-cache \
-  swift test --jobs 1 --build-path /private/tmp/aura-swiftpm-test-build
+CLANG_MODULE_CACHE_PATH=/private/tmp/containerdesktop-module-cache \
+  swift test --jobs 1 --build-path /private/tmp/containerdesktop-swiftpm-test-build
 ```

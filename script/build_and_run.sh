@@ -8,12 +8,11 @@ Usage: ./script/build_and_run.sh [run|--debug|--logs|--telemetry|--verify]
 Builds the SwiftPM GUI product and launches it as a packaged .app via `open -n`.
 
 Optional overrides:
-  AURA_PRODUCT_NAME            SwiftPM executable product name (default: Aura)
-  AURA_BUNDLE_NAME             Bundle name to stage in dist/ (default: Aura)
-                               Set to "Container Desktop" for dist/Container Desktop.app
-  AURA_BUNDLE_ID               Bundle identifier for Info.plist (default: com.container.desktop.aura)
-  AURA_MIN_SYSTEM_VERSION      Minimum macOS version (default: 14.0)
-  AURA_BUILD_CONFIGURATION     Swift build configuration: debug|release (default: debug)
+  CONTAINER_DESKTOP_PRODUCT_NAME        SwiftPM executable product name (default: ContainerDesktop)
+  CONTAINER_DESKTOP_BUNDLE_NAME         Bundle name to stage in dist/ (default: Container Desktop)
+  CONTAINER_DESKTOP_BUNDLE_ID           Bundle identifier (default: com.wpitombeira.containerdesktop)
+  CONTAINER_DESKTOP_MIN_SYSTEM_VERSION  Minimum macOS version (default: 14.0)
+  CONTAINER_DESKTOP_BUILD_CONFIGURATION Swift build configuration: debug|release (default: debug)
 USAGE
 }
 
@@ -34,11 +33,11 @@ if [[ "$MODE" == "--help" || "$MODE" == "-h" ]]; then
 fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PRODUCT_NAME="${AURA_PRODUCT_NAME:-Aura}"
-BUNDLE_NAME="${AURA_BUNDLE_NAME:-$PRODUCT_NAME}"
-BUNDLE_ID="${AURA_BUNDLE_ID:-com.container.desktop.aura}"
-MIN_SYSTEM_VERSION="${AURA_MIN_SYSTEM_VERSION:-14.0}"
-SWIFT_CONFIGURATION="${AURA_BUILD_CONFIGURATION:-debug}"
+PRODUCT_NAME="${CONTAINER_DESKTOP_PRODUCT_NAME:-${AURA_PRODUCT_NAME:-ContainerDesktop}}"
+BUNDLE_NAME="${CONTAINER_DESKTOP_BUNDLE_NAME:-${AURA_BUNDLE_NAME:-Container Desktop}}"
+BUNDLE_ID="${CONTAINER_DESKTOP_BUNDLE_ID:-${AURA_BUNDLE_ID:-com.wpitombeira.containerdesktop}}"
+MIN_SYSTEM_VERSION="${CONTAINER_DESKTOP_MIN_SYSTEM_VERSION:-${AURA_MIN_SYSTEM_VERSION:-14.0}}"
+SWIFT_CONFIGURATION="${CONTAINER_DESKTOP_BUILD_CONFIGURATION:-${AURA_BUILD_CONFIGURATION:-debug}}"
 
 DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$BUNDLE_NAME.app"

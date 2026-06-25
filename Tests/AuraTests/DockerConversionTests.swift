@@ -1,5 +1,5 @@
 import XCTest
-@testable import Aura
+@testable import ContainerDesktop
 
 final class DockerConversionTests: XCTestCase {
     private func hasPair(_ command: [String], _ flag: String, _ value: String) -> Bool {
