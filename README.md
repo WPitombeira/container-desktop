@@ -12,6 +12,7 @@ Container Desktop provides:
 - A lightweight dashboard for command output and local runtime status
 - Operational views for containers, images, volumes, networks, logs, converter, and settings
 - A conversion workflow for common `docker run` flags and simplified Compose service models
+- A Settings workflow that checks Apple's GitHub releases, shows the latest changelog, downloads the signed installer package, and opens macOS Installer after user confirmation
 - A low-overhead control plane for teams that want a simpler local container GUI
 
 ## Why this is low-resource
@@ -59,7 +60,9 @@ For a local unsigned release archive:
 
 ### Apple Container CLI requirement
 
-Install Apple's [`container`](https://github.com/apple/container) tool first, then make sure the CLI is accessible:
+Container Desktop depends on Apple's [`container`](https://github.com/apple/container) tool. You can install it manually from the [Apple Container releases page](https://github.com/apple/container/releases), or use **Settings > Apple Container Runtime** in the app to check the latest GitHub release and open the signed installer package.
+
+After installation, make sure the CLI is accessible:
 
 ```bash
 container --version
@@ -73,20 +76,32 @@ ls -l /usr/local/bin/container
 
 then install the CLI to a standard path or launch the app from an environment whose `PATH` includes the binary.
 
+The app does not run privileged installers silently. When an install or update is available, it downloads the selected release asset only after an in-app action or enabled auto-download setting, then opens the `.pkg` in macOS Installer so the user can approve Apple's installer prompts.
+
 ## Usage workflows
 
 ### 1) Validate container CLI connectivity
 
 Use **Test Container CLI** from the toolbar. This executes `container --help` and shows command output in the in-app log console.
 
-### 2) Convert a container intent
+### 2) Install or update Apple Container
+
+Open **Settings > Apple Container Runtime**:
+
+- **Refresh runtime** discovers the local `container` binary and version.
+- **Check for updates** reads the latest release metadata from [`apple/container`](https://github.com/apple/container/releases).
+- **Auto-check for updates** runs that release check when Settings opens.
+- **Auto-download updates** downloads the signed installer package when an update is found; installation still requires user confirmation through macOS Installer.
+- The release changelog is shown before installing when GitHub release notes are available.
+
+### 3) Convert a container intent
 
 Go to **Converter**, paste a `docker run ...` command, and use **Convert**.
 The app returns an Apple Container command form and surfaces warnings for unsupported flags.
 
 Current converter behavior is MVP-grade. It supports common `docker run` flags (`--name`, `-p/--publish`, `-v/--volume`, `-e/--env`, `-d/--detach`, `--rm`, `--network`) and simplified service models; review generated commands before execution.
 
-### 3) Monitor runtime output
+### 4) Monitor runtime output
 
 The Dashboard log stream updates from the running process output and errors.
 

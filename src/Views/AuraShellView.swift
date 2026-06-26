@@ -1,9 +1,44 @@
+import AppKit
 import SwiftUI
 
 struct AuraShellView: View {
     @StateObject private var engine = AuraEngine()
     @StateObject private var store = AuraRuntimeStore()
     @State private var selection: AuraSection = .dashboard
+
+    private let sidebarSections: [AuraSection] = [
+        .dashboard,
+        .containers,
+        .images,
+        .volumes,
+        .networks,
+        .converter,
+        .logs
+    ]
+
+    private var appIcon: some View {
+        Image(nsImage: NSApplication.shared.applicationIconImage)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: 17, height: 17)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+
+    private var sidebarHeader: some View {
+        HStack(spacing: 10) {
+            appIcon
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Container Desktop")
+                    .font(.headline)
+                Text("Container management")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 4)
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -41,27 +76,25 @@ struct AuraShellView: View {
 
     private var sidebar: some View {
         List(selection: $selection) {
-            Section("Operations") {
-                ForEach([
-                    AuraSection.dashboard,
-                    .containers,
-                    .images,
-                    .volumes,
-                    .networks,
-                    .converter,
-                    .logs
-                ], id: \.id) { section in
+            Section {
+                ForEach(sidebarSections, id: \.id) { section in
                     Label(section.rawValue, systemImage: section.iconName)
                         .tag(section)
+                        .contentShape(Rectangle())
                 }
+            } header: {
+                sidebarHeader
             }
 
             Section("System") {
                 Label(AuraSection.settings.rawValue, systemImage: AuraSection.settings.iconName)
                     .tag(AuraSection.settings)
+                    .contentShape(Rectangle())
             }
         }
         .listStyle(.sidebar)
+        .frame(minWidth: 230)
+        .scrollContentBackground(.automatic)
         .navigationTitle("Container Desktop")
     }
 

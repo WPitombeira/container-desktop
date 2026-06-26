@@ -14,6 +14,7 @@ Environment overrides:
   CONTAINER_DESKTOP_BUNDLE_NAME        Bundle name to stage in dist/ (default: Container Desktop)
   CONTAINER_DESKTOP_BUNDLE_ID          Bundle identifier (default: com.wpitombeira.containerdesktop)
   CONTAINER_DESKTOP_MIN_SYSTEM_VERSION Minimum macOS version (default: 26.0)
+  CONTAINER_DESKTOP_SWIFTPM_BUILD_PATH Optional SwiftPM build path override
 USAGE
 }
 
@@ -33,6 +34,7 @@ PRODUCT_NAME="${CONTAINER_DESKTOP_PRODUCT_NAME:-${AURA_PRODUCT_NAME:-ContainerDe
 BUNDLE_NAME="${CONTAINER_DESKTOP_BUNDLE_NAME:-${AURA_BUNDLE_NAME:-Container Desktop}}"
 BUNDLE_ID="${CONTAINER_DESKTOP_BUNDLE_ID:-${AURA_BUNDLE_ID:-com.wpitombeira.containerdesktop}}"
 MIN_SYSTEM_VERSION="${CONTAINER_DESKTOP_MIN_SYSTEM_VERSION:-${AURA_MIN_SYSTEM_VERSION:-26.0}}"
+SWIFTPM_BUILD_PATH="${CONTAINER_DESKTOP_SWIFTPM_BUILD_PATH:-${AURA_SWIFTPM_BUILD_PATH:-}}"
 
 DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$BUNDLE_NAME.app"
@@ -85,8 +87,13 @@ kill_existing() {
   done
 }
 
-/usr/bin/swift build --configuration release
-BUILD_BIN_DIR="$(/usr/bin/swift build --show-bin-path --configuration release)"
+SWIFT_BUILD_ARGS=(build --configuration release)
+if [[ -n "$SWIFTPM_BUILD_PATH" ]]; then
+  SWIFT_BUILD_ARGS+=(--build-path "$SWIFTPM_BUILD_PATH")
+fi
+
+/usr/bin/swift "${SWIFT_BUILD_ARGS[@]}"
+BUILD_BIN_DIR="$(/usr/bin/swift "${SWIFT_BUILD_ARGS[@]}" --show-bin-path)"
 BUILT_BINARY="$BUILD_BIN_DIR/$PRODUCT_NAME"
 if [[ ! -x "$BUILT_BINARY" ]]; then
   echo "Release build did not produce executable: $BUILT_BINARY" >&2

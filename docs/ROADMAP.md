@@ -8,6 +8,7 @@
 - Add explicit command copy-to-clipboard and safe dry-run mode.
 - Expand tests for command execution, lifecycle actions, and real CLI output fixtures.
 - Document versioned release process.
+- Add visual release/install progress details such as verified checksums and download size.
 
 ## Medium term
 

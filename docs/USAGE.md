@@ -8,7 +8,7 @@ Container Desktop is organized around operational macOS views:
 - Containers, Images, Volumes, Networks: resource-oriented lists
 - Converter: convert common `docker run` commands into Apple Container args
 - Logs: inspect app-side activity
-- Settings: local preferences and runtime notes
+- Settings: local preferences, runtime discovery, and Apple Container install/update checks
 
 The app requires an Apple silicon Mac running macOS 26.0 or newer because it wraps Apple `container`.
 
@@ -20,6 +20,17 @@ The app requires an Apple silicon Mac running macOS 26.0 or newer because it wra
 4. Check the live log output for `container` usage details.
 
 This path is useful to verify CLI setup before using operational commands.
+
+## Installing or updating Apple Container
+
+1. Select **Settings**.
+2. Use **Refresh runtime** to discover the local `container` binary.
+3. Use **Check for updates** to fetch the latest release metadata from [apple/container](https://github.com/apple/container/releases).
+4. Review the latest release version, changelog, and install plan.
+5. Click **Install Apple Container** or **Install update** and confirm the prompt.
+6. Complete the installation in macOS Installer.
+
+The app prefers Apple's signed `.pkg` installer asset from the GitHub release. **Auto-check for updates** checks release metadata when Settings opens. **Auto-download updates** can download the installer package when an update is available, but installation still requires user confirmation in macOS Installer.
 
 ## Converting Docker workflow definitions
 

@@ -9,11 +9,19 @@
 - confirm you are on an Apple silicon Mac running macOS 26.0 or newer
 - run `container --version`
 - verify the binary is reachable by the app through a standard path or `PATH`
+- open **Settings > Apple Container Runtime** and use **Check for updates** to download/open the latest Apple Container installer from GitHub
 - ensure the binary is executable:
 
 ```bash
 which container
 ```
+
+## Apple Container update check fails
+
+- Confirm network access to [apple/container releases](https://github.com/apple/container/releases).
+- Retry **Check for updates** from Settings.
+- If GitHub is reachable in a browser but the app still fails, install the latest signed `.pkg` manually from the releases page.
+- After installation, run **Refresh runtime** or restart Container Desktop.
 
 ## App is not opening or crashes immediately
 
