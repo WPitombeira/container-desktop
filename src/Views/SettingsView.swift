@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import AuraMCPKit
 
 struct SettingsView: View {
     @State private var autoRefresh = false
@@ -7,6 +8,7 @@ struct SettingsView: View {
     @StateObject private var onboardingStore = ContainerRuntimeOnboardingStore()
     @AppStorage("runtime.autoCheckForUpdates") private var autoCheckForUpdates = true
     @AppStorage("runtime.autoDownloadUpdates") private var autoDownloadUpdates = false
+    @AppStorage("agents.mcpPackagePath") private var mcpPackagePath = AuraMCPConnectionDescriptor.defaultPackagePath()
     @State private var showInstallConfirmation = false
     @State private var changelogExpanded = false
 
@@ -22,6 +24,10 @@ struct SettingsView: View {
                         Text(section.rawValue).tag(section.rawValue)
                     }
                 }
+            }
+
+            Section("Agents MCP") {
+                mcpConnectionPanel
             }
 
             Section("Apple Container Runtime") {
@@ -229,5 +235,120 @@ struct SettingsView: View {
         if let installedVersion = onboardingStore.installedVersion {
             LabeledContent("Version", value: installedVersion)
         }
+    }
+
+    private var mcpDescriptor: AuraMCPConnectionDescriptor {
+        AuraMCPConnectionDescriptor(packagePath: mcpPackagePath)
+    }
+
+    private var isMCPPackagePathValid: Bool {
+        let packageFile = URL(fileURLWithPath: mcpPackagePath).appendingPathComponent("Package.swift")
+        return FileManager.default.fileExists(atPath: packageFile.path)
+    }
+
+    private var mcpConnectionPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+        HStack(spacing: 10) {
+                Image(systemName: isMCPPackagePathValid ? "point.3.connected.trianglepath.dotted" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(isMCPPackagePathValid ? AuraTheme.success : AuraTheme.warning)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("MCP server")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    Text(isMCPPackagePathValid ? "Ready for local Agents" : "Package.swift was not found at this path")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+                Spacer()
+                Text("stdio")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AuraTheme.accent.opacity(0.12), in: Capsule())
+                    .foregroundStyle(AuraTheme.accent)
+            }
+
+            TextField("Package path", text: $mcpPackagePath)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(.body, design: .monospaced))
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Server command")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text(mcpDescriptor.shellCommand)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Agent config")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                ScrollView(.vertical) {
+                    Text(mcpDescriptor.agentConfigJSON)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                }
+                .frame(maxHeight: 170)
+                .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    copyToPasteboard(mcpDescriptor.agentConfigJSON)
+                } label: {
+                    Label("Copy config", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(AuraCompactButtonStyle(prominent: true))
+
+                Button {
+                    copyToPasteboard(mcpDescriptor.shellCommand)
+                } label: {
+                    Label("Copy command", systemImage: "terminal")
+                }
+                .buttonStyle(AuraCompactButtonStyle())
+
+                Button {
+                    mcpPackagePath = AuraMCPConnectionDescriptor.defaultPackagePath()
+                } label: {
+                    Label("Reset", systemImage: "arrow.counterclockwise")
+                }
+                .buttonStyle(AuraCompactButtonStyle())
+
+                Button {
+                    NSWorkspace.shared.open(URL(fileURLWithPath: mcpPackagePath))
+                } label: {
+                    Label("Open", systemImage: "folder")
+                }
+                .buttonStyle(AuraCompactButtonStyle())
+            }
+
+            HStack(spacing: 8) {
+                toolChip("Skills")
+                toolChip("Compose")
+                toolChip("Provisioning")
+                toolChip("Standards")
+            }
+        }
+    }
+
+    private func toolChip(_ label: String) -> some View {
+        Text(label)
+            .font(.caption.weight(.medium))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.secondary.opacity(0.09), in: Capsule())
+            .foregroundStyle(.secondary)
+    }
+
+    private func copyToPasteboard(_ value: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
     }
 }

@@ -6,81 +6,145 @@ struct ContainersView: View {
     @State private var selectedContainer: AuraContainer.ID?
 
     private var filtered: [AuraContainer] {
-        let items = store.filteredContainers(searchText)
-        return items.sorted { $0.status.sortOrder < $1.status.sortOrder }
+        store.filteredContainers(searchText)
+            .sorted { $0.status.sortOrder < $1.status.sortOrder }
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            List(selection: $selectedContainer) {
-                ForEach(filtered) { container in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(container.name).bold()
-                            Spacer()
-                            Text(container.status.badgeLabel)
-                                .font(.caption)
-                                .padding(.vertical, 2)
-                                .padding(.horizontal, 6)
-                                .background(
-                                    Capsule().fill(statusColor(for: container.status).opacity(0.18))
-                                )
-                                .foregroundStyle(statusColor(for: container.status))
-                        }
-                        Text(container.image).font(.caption).foregroundStyle(.secondary)
-                        HStack {
-                            Text("Ports: \(container.ports.joined(separator: ", "))")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("CPU \(container.cpu, specifier: "%.2f%%")")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 14) {
+            resourceToolbar
+
+            if filtered.isEmpty {
+                AuraEmptyState(
+                    title: searchText.isEmpty ? "No containers found" : "No containers match this search",
+                    message: searchText.isEmpty ? "Refresh resources or create containers with the CLI to populate this view." : "Try a different container name, image, status, or port.",
+                    systemImage: "shippingbox"
+                )
+            } else {
+                AuraSurface {
+                    VStack(spacing: 0) {
+                        containerHeader
+                        Divider()
+                        ScrollView {
+                            LazyVStack(spacing: 0) {
+                                ForEach(filtered) { container in
+                                    containerRow(container)
+                                    if container.id != filtered.last?.id {
+                                        Divider()
+                                    }
+                                }
+                            }
                         }
                     }
-                    .tag(container.id)
-                    .padding(.vertical, 2)
-                }
-            }
-            .searchable(text: $searchText, prompt: "Search containers")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Start") {
-                        selectedContainer.map(store.startContainer)
-                    }
-                    .disabled(selectedContainer == nil)
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Stop") {
-                        selectedContainer.map(store.stopContainer)
-                    }
-                    .disabled(selectedContainer == nil)
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Remove Stopped") {
-                        store.removeCompletedContainers()
-                    }
-                }
-            }
-            .onAppear {
-                if selectedContainer == nil, let first = filtered.first {
-                    selectedContainer = first.id
                 }
             }
         }
-        .navigationTitle("Containers")
+        .auraPage()
+        .searchable(text: $searchText, prompt: "Search containers")
+        .onAppear {
+            if selectedContainer == nil, let first = filtered.first {
+                selectedContainer = first.id
+            }
+        }
     }
 
-    private func statusColor(for status: AuraRuntimeStatus) -> Color {
-        switch status {
-        case .running:
-            return .green
-        case .paused:
-            return .yellow
-        case .unhealthy:
-            return .red
-        case .stopped:
-            return .secondary
+    private var resourceToolbar: some View {
+        HStack(spacing: 10) {
+            AuraSectionHeader("Containers", subtitle: "\(filtered.count) shown • \(store.runningContainersCount) running", systemImage: "shippingbox")
+            Spacer()
+            Button {
+                selectedContainer.map(store.startContainer)
+            } label: {
+                Label("Start", systemImage: "play.fill")
+            }
+            .buttonStyle(AuraCompactButtonStyle(prominent: true))
+            .disabled(selectedContainer == nil)
+
+            Button {
+                selectedContainer.map(store.stopContainer)
+            } label: {
+                Label("Stop", systemImage: "stop.fill")
+            }
+            .buttonStyle(AuraCompactButtonStyle())
+            .disabled(selectedContainer == nil)
+
+            Button {
+                store.removeCompletedContainers()
+            } label: {
+                Label("Remove stopped", systemImage: "trash")
+            }
+            .buttonStyle(AuraCompactButtonStyle())
         }
+    }
+
+    private var containerHeader: some View {
+        HStack(spacing: 14) {
+            tableLabel("Name", width: 220)
+            tableLabel("Image")
+            tableLabel("Status", width: 120)
+            tableLabel("Ports", width: 160)
+            tableLabel("CPU", width: 80)
+            tableLabel("Memory", width: 90)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.secondary.opacity(0.06))
+    }
+
+    private func containerRow(_ container: AuraContainer) -> some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(container.name)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                Text(shortID(container.id))
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 220, alignment: .leading)
+
+            Text(container.image)
+                .font(.caption)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            AuraStatusBadge(status: container.status)
+                .frame(width: 120, alignment: .leading)
+
+            Text(container.ports.isEmpty ? "None" : container.ports.joined(separator: ", "))
+                .font(.caption)
+                .foregroundStyle(container.ports.isEmpty ? .secondary : .primary)
+                .lineLimit(1)
+                .frame(width: 160, alignment: .leading)
+
+            Text("\(container.cpu, specifier: "%.2f")%")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 80, alignment: .leading)
+
+            Text(container.memory)
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 90, alignment: .leading)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(selectedContainer == container.id ? AuraTheme.accent.opacity(0.12) : Color.clear)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedContainer = container.id
+        }
+    }
+
+    private func tableLabel(_ value: String, width: CGFloat? = nil) -> some View {
+        Text(value.uppercased())
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .frame(width: width, alignment: .leading)
+            .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
+    }
+
+    private func shortID(_ id: String) -> String {
+        String(id.prefix(12))
     }
 }

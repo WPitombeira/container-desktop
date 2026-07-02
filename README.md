@@ -12,6 +12,7 @@ Container Desktop provides:
 - A lightweight dashboard for command output and local runtime status
 - Operational views for containers, images, volumes, networks, logs, converter, and settings
 - A conversion workflow for common `docker run` flags and simplified Compose service models
+- A local MCP server for Agents that can install project skills and generate/provision Docker Compose projects
 - A Settings workflow that checks Apple's GitHub releases, shows the latest changelog, downloads the signed installer package, and opens macOS Installer after user confirmation
 - A low-overhead control plane for teams that want a simpler local container GUI
 
@@ -105,6 +106,23 @@ Current converter behavior is MVP-grade. It supports common `docker run` flags (
 
 The Dashboard log stream updates from the running process output and errors.
 
+### 5) Connect Agents through MCP
+
+Open **Settings > Agents MCP** and copy the generated agent config. In a source checkout, the MCP command uses:
+
+```bash
+/usr/bin/swift run --package-path <container-desktop-path> AuraMCP
+```
+
+The MCP server exposes tools to:
+
+- install project-local Agent skills under `.agents/skills`
+- generate Docker Compose projects as text
+- provision Docker Compose project folders with `compose.yaml`, `.env.example`, `.gitignore`, and `README.md`
+- return the container standards Agents should follow
+
+Provisioning writes files by default. Containers are only started when an Agent explicitly sends `start: true`.
+
 ## Troubleshooting
 
 See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for full details.
@@ -129,9 +147,11 @@ See [SECURITY.md](SECURITY.md) for reporting guidance.
 ## Project structure
 
 - `src/` — SwiftUI app and conversion logic
+- `src/MCP/` — reusable MCP server, Agent connection, skill installation, and Compose provisioning logic
+- `mcp/` — `AuraMCP` stdio executable entrypoint
 - `docs/` — documentation set (architecture, usage, troubleshooting, roadmap)
 - `Tests/` — SwiftPM tests for conversion, parsing, CLI discovery, and command models
-- `Package.swift` — Swift package definition (`ContainerDesktop` executable product)
+- `Package.swift` — Swift package definition (`ContainerDesktop` and `AuraMCP` executable products)
 
 ## Contributing
 

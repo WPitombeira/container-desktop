@@ -19,10 +19,6 @@ struct StatusSummaryBar: View {
         isCliActive ? "CLI Active" : "CLI Idle"
     }
 
-    private var cliStatusIcon: String {
-        isCliActive ? "bolt.fill" : "pause.fill"
-    }
-
     private var cliStatusTint: Color {
         isCliActive ? Color.accentColor : Color.secondary
     }
@@ -32,72 +28,67 @@ struct StatusSummaryBar: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Image(nsImage: NSApplication.shared.applicationIconImage)
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: 14, height: 14)
-                    .clipShape(RoundedRectangle(cornerRadius: 3))
+        HStack(spacing: 10) {
+            statusChip
 
-                statusChip
+            metricPill(icon: "shippingbox", value: "\(store.runningContainersCount)/\(store.totalContainersCount)", label: "Containers")
+            metricPill(icon: "photo.on.rectangle", value: "\(store.images.count)", label: "Images")
+            metricPill(icon: "network", value: "\(store.networks.count)", label: "Networks")
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        metricPill(icon: "shippingbox", value: "\(store.runningContainersCount)/\(store.totalContainersCount)", label: "Containers")
-                        metricPill(icon: "photo", value: "\(store.images.count)", label: "Images")
-
-                        if let cliSourceName {
-                            metricPill(icon: "terminal", value: cliSourceName, label: "CLI")
-                                .help("CLI path: \(store.cliPath?.path ?? "Unknown")")
-                        }
-                    }
-                    .padding(.horizontal, 2)
-                }
-
-                Text("Updated \(formattedSync)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+            if let cliSourceName {
+                metricPill(icon: "terminal", value: cliSourceName, label: "CLI")
+                    .help("CLI path: \(store.cliPath?.path ?? "Unknown")")
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(.regularMaterial)
+
+            Spacer()
+
+            Text("Updated \(formattedSync)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
+        .padding(.horizontal, 22)
+        .padding(.vertical, 10)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.42))
     }
 
     @ViewBuilder
     private var statusChip: some View {
-        Label(cliStatusText, systemImage: cliStatusIcon)
-            .labelStyle(.titleAndIcon)
-            .font(.subheadline.weight(.medium))
-            .padding(.vertical, 4)
-            .padding(.horizontal, 10)
-            .background(
-                Capsule().fill(cliStatusTint.opacity(0.16))
-            )
-            .foregroundStyle(cliStatusTint)
+        HStack(spacing: 7) {
+            Circle()
+                .fill(cliStatusTint)
+                .frame(width: 7, height: 7)
+            Text(cliStatusText)
+                .font(.caption.weight(.semibold))
+        }
+        .padding(.vertical, 5)
+        .padding(.horizontal, 9)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(cliStatusTint.opacity(0.13))
+        )
+        .foregroundStyle(cliStatusTint)
     }
 
     @ViewBuilder
     private func metricPill(icon: String, value: String, label: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Text(value)
-                .font(.caption).bold()
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.primary)
+                .lineLimit(1)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(.thinMaterial)
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.secondary.opacity(0.08))
         )
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }

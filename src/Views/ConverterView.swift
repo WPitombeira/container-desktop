@@ -7,51 +7,66 @@ struct ConverterView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Docker to Apple Container")
-                .font(.title3)
-                .bold()
-            Text("Paste a Docker Compose or `docker run` snippet to generate an equivalent command.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            AuraSectionHeader(
+                "Docker command converter",
+                subtitle: "Paste a Docker command and generate an Apple Container equivalent.",
+                systemImage: "arrow.left.arrow.right"
+            )
 
-            TextEditor(text: $dockerInput)
-                .font(.system(.body, design: .monospaced))
-                .frame(minHeight: 180)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.25)))
-                .padding(.bottom, 6)
+            AuraSurface {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Input")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    TextEditor(text: $dockerInput)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(minHeight: 180)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-            HStack {
-                Button("Convert") {
-                    convertCommand()
+                    HStack {
+                        Button {
+                            convertCommand()
+                        } label: {
+                            Label("Convert", systemImage: "wand.and.stars")
+                        }
+                        .buttonStyle(AuraCompactButtonStyle(prominent: true))
+
+                        Button {
+                            dockerInput = ""
+                            convertedCommand = ""
+                        } label: {
+                            Label("Clear", systemImage: "xmark")
+                        }
+                        .buttonStyle(AuraCompactButtonStyle())
+
+                        Spacer()
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-
-                Button("Clear") {
-                    dockerInput = ""
-                    convertedCommand = ""
-                }
-                .buttonStyle(.bordered)
+                .padding(16)
             }
 
             if !convertedCommand.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Generated command")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(convertedCommand)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.secondary.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                AuraSurface {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Generated command")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text(convertedCommand)
+                            .font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    }
+                    .padding(16)
                 }
             }
 
             Spacer()
         }
-        .padding(14)
-        .navigationTitle("Converter")
+        .auraPage()
     }
 
     private func convertCommand() {
